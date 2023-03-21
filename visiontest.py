@@ -17,6 +17,7 @@ class Rabbit:
 
 
         self.is_hungry = True
+        self.is_horny = False
         self.is_near_food = False
         self.is_at_top = False
         self.is_at_bottom = False
@@ -33,9 +34,11 @@ class Rabbit:
         self.willing_to_turn = 180
         self.bushes_eaten = 0
         self.bush_bunny_can_see = []
+        self.hot_single_rabbits = []
         self.bush_distances = []
         self.color = (255,0,0)
         self.hunger_level = 0
+        
 
         self.eyes_vector_x = 0
         self.eyes_vector_y = -1
@@ -108,6 +111,7 @@ class Rabbit:
         
 
     def hunt(self,unique_bushes):
+        self.count_bushes(unique_bushes)
         # check for the closest bush and change the eye vector to be that!
         if self.bush_bunny_can_see:
             self.closest_bush_index, self.min_distance = self.get_closest_dist()
@@ -117,6 +121,7 @@ class Rabbit:
                     del self.bush_bunny_can_see[self.closest_bush_index]
                     self.bushes_eaten += 1
                     self.is_hungry = False
+                    self.is_horny = True
                     self.starve_timer -= 1
                     self.hunger_level -= 1
                     self.color = (255,0,0)
@@ -124,7 +129,7 @@ class Rabbit:
                 except:
                     print("the index is: {}, the coordinates are {}".format(self.closest_bush_index,self.bush_bunny_can_see[self.closest_bush_index]))
             if self.is_hungry:
-                pygame.draw.line(WIN,(0,0,255),(self.pos_x,self.pos_y),self.bush_bunny_can_see[self.closest_bush_index])
+                #pygame.draw.line(WIN,(0,0,255),(self.pos_x,self.pos_y),self.bush_bunny_can_see[self.closest_bush_index])
                 food_x = self.bush_bunny_can_see[self.closest_bush_index][0] - self.pos_x
                 food_y = self.bush_bunny_can_see[self.closest_bush_index][1] - self.pos_y
                 self.eyes_vector_x = food_x / math.sqrt(food_x**2 + food_y**2)
@@ -145,13 +150,29 @@ class Rabbit:
     def count_bushes(self,unique_bushes):
         points = []
         self.bush_bunny_can_see.clear()
+        for x in range(int(self.pos_x - self.awareness_rad),int(self.pos_x + self.awareness_rad)):
+            for y in range(int(self.pos_y - int(math.sqrt(self.awareness_rad**2 - (x - int(self.pos_x))**2))),int(math.sqrt(self.awareness_rad**2 - (x - int(self.pos_x))**2) + int(self.pos_y))):
+                #if math.sqrt((x - self.pos_x)**2 + (y - self.pos_y)**2) < self.awareness_rad:
+                points.append((x, y))
+        for bush in unique_bushes:
+            if bush in points:
+                self.bush_bunny_can_see.append(bush)
+
+    def find_mate(self,rabbits):
+        points = []
+        self.hot_single_rabbits.clear()
         for x in range(WIDTH):
             for y in range(HEIGHT):
                 if math.sqrt((x - self.pos_x)**2 + (y - self.pos_y)**2) < self.awareness_rad:
                     points.append((x, y))
-        for bush in unique_bushes:
-            if bush in points:
-                self.bush_bunny_can_see.append(bush)
+        for rabbit in rabbits:
+            if (rabbit.pos_x,rabbit.pos_y) in points:
+                self.hot_single_rabbits.append(rabbit)
+                print("I wanna mate with {}".format(rabbit))
+
+
+    def repro(self,rabbits):
+        self.find_mate(rabbits)
 
         #print("{} can see {} bushes".format(self,len(self.bush_bunny_can_see)))
 
@@ -166,7 +187,7 @@ def draw_line(rabbit,bush_bunny_can_see):
 def main():
     run = True
     clock = pygame.time.Clock()
-    numb_bushes = 50
+    numb_bushes = 100
     bush_rad = 2
     bush_coords = []
     i = 0
@@ -183,11 +204,15 @@ def main():
     harry = Rabbit(WIDTH / 4,HEIGHT / 4,3)
     barnum = Rabbit(1.5 * WIDTH / 4,1.5 * HEIGHT / 4,4)
     louis = Rabbit(WIDTH / 4,HEIGHT / 4,3)
-    rabbits = [george,harry,barnum,louis]
+    george1 = Rabbit(3*WIDTH / 4,3*HEIGHT / 4,5)
+    harry1 = Rabbit(WIDTH / 4,HEIGHT / 4,3)
+    barnum1 = Rabbit(1.5 * WIDTH / 4,1.5 * HEIGHT / 4,4)
+    louis1 = Rabbit(WIDTH / 4,HEIGHT / 4,3)
+    rabbits = [george,harry,barnum,louis,george1,harry1,barnum1,louis1]
 
     
     while run:
-        clock.tick(60)
+        clock.tick(30)
         WIN.fill((217,217,217))
         for bush in unique_bushes:
             pygame.draw.circle(WIN, (0,255,0), bush, bush_rad)
@@ -200,20 +225,21 @@ def main():
                     george.awareness_rad += 5
                 if event.key == pygame.K_DOWN:
                     george.awareness_rad -= 5
+                    
 
         
         
         for rabbit in rabbits:
-            rabbit.count_bushes(unique_bushes)
-            
-            if rabbit.starve_timer == 3:
+            if rabbit.starve_timer == 30:
                 rabbits.remove(rabbit)
                 print("dead wabbit")
             elif rabbit.is_hungry:
                 rabbit.hunt(unique_bushes)
+            #elif not rabbit.is_hungry and rabbit.is_horny:
+                #rabbit.repro(rabbits)
             else:
                 rabbit.wander()
-                
+
             if rabbit.is_hungry:
                 rabbit.hunger_level += 1
             rabbit.internal_timer += 1
