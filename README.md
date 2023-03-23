@@ -1,7 +1,6 @@
 # evolution-2d
-A top down survival of the fittest experience
+This world randomly generates lakes and bushes
 
-Here we have two rabbits. They will wander
+A group of rabbits is spawned. They will search for food and avoid water. 
 
-The user clicks to add bushes, which will attract the rabbits if they are close enough to notice the bushes. 
-Once the rabbits reach the bushes, they will eat them. 
+If they go hungry for too long, the rabbits will starve and die. 
