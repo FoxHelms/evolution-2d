@@ -1,3 +1,3 @@
 - Add foxes and have them hunt rabbits
 - Give rabbits the ability to reproduce
-- something else idk
+- address performance bottleneck when starving/hungry
